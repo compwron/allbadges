@@ -31,7 +31,7 @@ badges_data = j.map { |repo|
 BADGES
 }
 
-badges_file = "output/#{username}_badges.json"
+badges_file = "output/#{username}_badges.md"
 File.open(badges_file, 'w') { |file| file.puts badges_data }
 
 puts "Wrote badge data to #{badges_file}"
