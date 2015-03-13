@@ -1,13 +1,25 @@
+if ARGV.size != 1
+	puts "Usage: ruby allbadges.rb <github username>"
+	exit
+end	
+username = ARGV[0]
+data_file = "tmp/#{username}_data.json"
 
-# TODO: curl sort by recent
-# json = `curl https://api.github.com/users/#{username}/repos`    
-# f = File.open('alldata.json', 'w') {|file| file.puts json}
+unless File.exist?(data_file)
+	json = `curl https://api.github.com/users/#{username}/repos?sort=created`    
+	f = File.open(data_file, 'w') {|file| file.puts json}
+end
+
+data = File.read(data_file)
+
 require 'json'
-file = File.read('alldata.json')
-j = JSON.parse(file)
-username_reponames = j.map {|repo| repo["full_name"].split('/')}
+j = JSON.parse(data)
 
-def make_badges username, reponame
+badges_data = j.map { |repo| 
+	repo["full_name"].split('/')
+}.map { |pair|
+	username = pair.first
+	reponame = pair.last
 	<<-BADGES
 	#{username}/#{reponame}
 [![Code Climate](https://codeclimate.com/github/#{username}/#{reponame}/badges/gpa.svg)](https://codeclimate.com/github/#{username}/#{reponame})
@@ -17,13 +29,9 @@ def make_badges username, reponame
 [![Gem Version](https://img.shields.io/gem/v/#{reponame}.svg)](https://rubygems.org/gems/#{reponame})
 
 BADGES
-end
-
-badges = username_reponames.map {|pair|
-	username = pair.first
-	reponame = pair.last
-	make_badges(username, reponame)
 }
 
-File.open('badges.md', 'w') {|file| file.puts badges}
-p badges
+badges_file = "output/#{username}_badges.json"
+File.open(badges_file, 'w') { |file| file.puts badges_data }
+
+puts "Wrote badge data to #{badges_file}"
